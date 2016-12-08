@@ -15,9 +15,7 @@
     </style>
 </head>
 <body>
-<main id="mapp-container">
-    {% block body %}{% include page_filename %}{% endblock %}
-</main>
+<!-- TODO load scripts before body partial until everything uses mapp -->
 {% for filename in js_files %}
 <script src="{{ js_file(filename) }}" type="application/javascript"></script>
 {% endfor %}
@@ -26,5 +24,9 @@
     {% include "js/%s.js" % filename %}
     {% endfor %}
 </script>
+<main id="mapp-container">
+    {% block body %}{% include page_filename %}{% endblock %}
+</main>
+
 </body>
 </html>
