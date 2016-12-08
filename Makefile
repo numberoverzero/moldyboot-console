@@ -4,13 +4,13 @@ clean:
 	rm -rf build
 	rm -rf dist
 
-templates: clean
+templates:
 	bin/compile-templates --dst build --mode local
 
 local: templates
 	bin/serve-local --src build/local
 
-production: clean
+production:
 	bin/compile-templates --dst build --mode production
 	bin/compress-server --src build/production --dst dist/server.tar.gz
 
