@@ -1,14 +1,12 @@
-.PHONY: clean templates local production develop
+.PHONY: clean local production develop serve
 
 clean:
 	rm -rf build
 	rm -rf dist
 
-templates:
+local:
 	bin/compile-templates --dst build --mode local
-
-local: templates
-	bin/serve-local --src build/local
+	bin/compress-server --src build/local --dst dist/local.tar.gz
 
 production:
 	bin/compile-templates --dst build --mode production
@@ -16,3 +14,6 @@ production:
 
 develop:
 	pip install -r requirements.txt
+
+serve: local
+	bin/serve-local --src build/local

@@ -89,7 +89,6 @@ def resources(*include):
 def render_to_directory(dst_root, ctx):
     dst_root.mkdir(parents=True, exist_ok=True)
     ctx = extend_context(ctx)
-    print(ctx)
 
     # 0. render all 1:1 sources
     for src in resources("css", "js"):
