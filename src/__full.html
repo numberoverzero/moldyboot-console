@@ -23,20 +23,30 @@
 
 
 <main id="mapp-container">
-    {% block main %}{% include page_filename %}{% endblock %}
+    {# rip out scripts so they don't start running before dependencies are loaded below#}
+    {% filter without_scripts %}
+    {% include page_filename %}
+    {% endfilter %}
 </main>
 
-
-{% for filename in js_files %}
-<script src="{{ js_file(filename) }}" type="application/javascript"></script>
-{% endfor %}
-
-
+{# some external scripts (mapp) have an immediate dependency on
+   inline scripts like rq, so they must come first.
+#}
 <script type="application/javascript">
     {% for filename in inline_js %}
     {% include "js/%s.js" % filename %}
     {% endfor %}
 </script>
+
+{# external scripts #}
+{% for filename in js_files %}
+<script src="{{ js_file(filename) }}" type="application/javascript"></script>
+{% endfor %}
+
+{# scripts ripped out of the partial #}
+{% filter only_scripts %}
+{% include page_filename %}
+{% endfilter %}
 
 
 </body>
