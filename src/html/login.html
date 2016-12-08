@@ -1,0 +1,67 @@
+{% set title = "Moldyboot Login" %}
+<div class="container">
+    <main class="wrapper">
+        <h2 class="title">Login to Moldyboot</h2>
+        <form action="#" id="login-form">
+            <fieldset>
+                <label for="login-username">Username</label>
+                <input id="login-username" type="text" autofocus>
+                <label for="login-password">Password</label>
+                <input id="login-password" type="password">
+                <input id="login-button" class="button-primary" value="send" type="submit">
+                <div id="login-error" class="container" style="display: none">Incorrect username or password.</div>
+            </fieldset>
+        </form>
+    </main>
+</div>
+<script type="application/javascript">
+    "use strict";
+
+    // Start generating a new key asap.
+    var newKey = window.keys.generate()
+    .then(function(keyBlob) {
+        console.log("generated new key");
+        return keyBlob;
+    });
+
+    var el = document.getElementById.bind(document);
+    var $username = el("login-username");
+    var $password = el("login-password");
+    var $loginButton = el("login-button");
+    var $loginStatus = el("login-error");
+
+    $loginButton.removeAttribute("disabled");
+
+    // Submit form against the API, not the console
+    el("login-form").addEventListener("submit", function(event) {
+        event.preventDefault();
+        var loginProgress = new Nanobar({classname: "progress"});
+        $loginButton.setAttribute("disabled", true);
+        var username = $username.value,
+            password = $password.value;
+
+        newKey
+        .then(function (keyBlob) {
+            loginProgress.go(15);
+            return window.keys.storage.saveKey(keyBlob, username)
+        })
+        .then(function() {
+            loginProgress.go(75);
+            return (new Client(username)).login(password);
+        })
+        .then(function () {
+            loginProgress.go(100);
+            $loginButton.removeAttribute("disabled");
+            $loginStatus.style.display = "none";
+            window.location.href = "{{ endpoints.console }}/console";
+        })
+        .catch(function (event) {
+            loginProgress.go(100);
+            $loginButton.removeAttribute("disabled");
+            $username.value = "";
+            $password.value = "";
+            $loginStatus.style.display = "";
+            console.log(event);
+        })
+    });
+</script>

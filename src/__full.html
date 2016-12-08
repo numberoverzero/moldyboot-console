@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }}</title>
+    {% for filename in css_files %}
+    <link href="{{ css_file(filename) }}" rel="stylesheet" type="text/css" />
+    {% endfor %}
+    <style>
+        {% for filename in inline_css %}
+        {% include "css/%s.css" % filename %}
+        {% endfor %}
+    </style>
+</head>
+<body>
+<main id="mapp-container">
+    {% block body %}{% include page_filename %}{% endblock %}
+</main>
+{% for filename in js_files %}
+<script src="{{ js_file(filename) }}" type="application/javascript"></script>
+{% endfor %}
+<script type="application/javascript">
+    {% for filename in inline_js %}
+    {% include "js/%s.js" % filename %}
+    {% endfor %}
+</script>
+</body>
+</html>

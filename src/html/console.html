@@ -1,0 +1,41 @@
+{% set title = "Moldyboot Console" %}
+<body>
+<div class="container">
+    <main class="wrapper">
+        <h2 class="title">Welcome to Moldyboot!</h2>
+        <section id="keySection" class="container" style="display: none">
+            <p>Your key's id is:</p>
+            <pre><code id="keyId"></code></pre>
+            <p>Your key's sha256 fingerprint is:</p>
+            <pre><code id="fingerprint"></code></pre>
+            <p>Your key is good until:</p>
+            <pre><code id="until"></code></pre>
+        </section>
+    </main>
+</div>
+<script type="application/javascript">
+    "use strict";
+    var el = document.getElementById.bind(document);
+
+    Client.forActiveUser()
+    .then(function(client) {return client.getKey();})
+    .then(function(response) {
+        if (response.ok) {
+            el("keyId").textContent = response.body.key_id;
+            el("fingerprint").textContent = response.body.fingerprint;
+            el("until").textContent = (new Date(response.body.until)).toLocaleTimeString();
+            el("keySection").style.display = "";
+        } else {
+            console.log("Failed to validate key!");
+            console.log(response);
+        }
+    })
+    .catch(function(error) {
+        if (window.errors.is(error, "NoActiveUser")) {
+            alert("Not logged in.  Redirecting to the login page.");
+            window.location.href = "{{endpoints.console}}/login";
+        } else {
+            console.log(error);
+        }
+    });
+</script>
