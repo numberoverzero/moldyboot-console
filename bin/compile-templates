@@ -7,8 +7,8 @@ import texas
 from jinja2 import Environment, FileSystemLoader
 
 jinja_options = {
-    "lstrip_blocks": True,
-    "trim_blocks": True
+    # "lstrip_blocks": True,
+    # "trim_blocks": True
 }
 
 src_root = pathlib.Path(
@@ -43,9 +43,9 @@ context = texas.Context()
 global_context = context.include("global")
 global_context.update({
     "css_files": ["milligram.min", "normalize.min"],
-    "js_files": ["nanobar.min", "moldyboot"],
+    "js_files": ["nanobar.min", "mapp", "moldyboot"],
     "inline_css": ["nanobar"],
-    "inline_js": ["rq.min"],
+    "inline_js": ["util", "rq.min"],
 
     "endpoints": {
         "api": None,
@@ -111,15 +111,29 @@ def render_to_directory(dst_root, ctx):
         dst = pathlib.Path(*src.parts[1:])
 
         # 1.1 render full page
+        # TODO | this needs to split out scripts so that full pages
+        # TODO | can put *all* scripts after <main>.  The following ordering is required:
+        # TODO | main html -> external js -> inline js -> page js
         save_rendered(
             full.render(ctx),
             dst_root / dst)
 
         # 1.2 render partial page
+        # Unlike the full page, partials have the luxury of knowing
+        # external and inline js have already been loaded.
         save_rendered(
             partial.render(ctx),
             dst_root / "_" / dst
         )
+
+    # 2. render fixed src=>dst mappings
+    for routing_file in ["_dynamicRoutes.json", "_prefetchManifest.json"]:
+        tpl = env.get_template(routing_file)
+        save_rendered(
+            tpl.render(ctx),
+            dst_root / routing_file
+        )
+
 
 
 @click.command("compile")
