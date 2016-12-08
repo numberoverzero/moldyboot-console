@@ -27,6 +27,17 @@ loader = FileSystemLoader([
 env = Environment(loader=loader, **jinja_options)
 
 
+def split_html(html):
+    """Takes a string of html and returns two new strings.
+
+    The first is the same html with all scripts stripped out, and the second is only the script tags.
+    """
+    raise NotImplementedError()
+
+env.filters["without_scripts"] = lambda content: split_html(content)[0]
+env.filters["only_scripts"] = lambda content: split_html(content)[1]
+
+
 def extend_context(ctx):
     for file_type in ["css", "js"]:
         ctx[file_type + "_file"] = functools.partial(url_file, file_type=file_type)
@@ -114,6 +125,7 @@ def render_to_directory(dst_root, ctx):
         # TODO | this needs to split out scripts so that full pages
         # TODO | can put *all* scripts after <main>.  The following ordering is required:
         # TODO | main html -> external js -> inline js -> page js
+        # TODO | this needs some html5lib loving.  A new function that takes a block and returns parsed html
         save_rendered(
             full.render(ctx),
             dst_root / dst)
