@@ -34,7 +34,7 @@ def extend_context(ctx):
 
 
 def url_file(name, file_type):
-    """Helper that provides the path to a file type."""
+    """Helper that provides the absolute path to a resource file."""
     if str(name).endswith("." + file_type):
         name = name[:1 + len(file_type)]
     return "/{type}/{name}.{type}".format(name=name, type=file_type)

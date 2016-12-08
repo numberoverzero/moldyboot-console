@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ title }}</title>
+    {% import page_filename as page with context %}
+    <title>{{ page.title }}</title>
     {% for filename in css_files %}
     <link href="{{ css_file(filename) }}" rel="stylesheet" type="text/css" />
     {% endfor %}
