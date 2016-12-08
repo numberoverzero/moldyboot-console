@@ -1,1 +1,138 @@
 #!/usr/bin/env python
+import click
+import functools
+import os
+import pathlib
+import texas
+from jinja2 import Environment, FileSystemLoader
+
+jinja_options = {
+    "lstrip_blocks": True,
+    "trim_blocks": True
+}
+
+src_root = pathlib.Path(
+    os.path.abspath(os.path.dirname(__file__)), "..", "src"
+).resolve()
+sources = {
+    "css": ["css", "vendor/css"],
+    "js": ["js", "vendor/js"],
+    "html": ["html"]
+}
+
+loader = FileSystemLoader([
+    str(src_root),
+    str(src_root / "vendor")  # Find vendor/css/js/script as css/js/script
+])
+env = Environment(loader=loader, **jinja_options)
+
+
+def extend_context(ctx):
+    for file_type in ["css", "js"]:
+        ctx[file_type + "_file"] = functools.partial(url_file, file_type=file_type)
+    return ctx
+
+
+def url_file(name, file_type):
+    """Helper that provides the path to a file type."""
+    if str(name).endswith("." + file_type):
+        name = name[:1 + len(file_type)]
+    return "/{type}/{name}.{type}".format(name=name, type=file_type)
+
+context = texas.Context()
+global_context = context.include("global")
+global_context.update({
+    "css_files": ["milligram.min", "normalize.min"],
+    "js_files": ["nanobar.min", "superagent.min", "moldyboot"],
+    "inline_css": ["nanobar"],
+    "inline_js": ["rq.min"],
+
+    "endpoints": {
+        "api": None,
+        "console": None
+    },
+
+    "webcrypto": {
+        "databaseName": "MoldyDatabase",
+        "databaseVersion": 1,
+        "keyStoreName": "MoldyKeyStore",
+        "metaStoreName": "MoldyMetaStore"
+    }
+})
+
+production_context = context.include("global", "production")
+production_context["endpoints.api"] = "https://api.moldyboot.com"
+production_context["endpoints.console"] = ""
+
+
+local_context = context.include("global", "local")
+local_context["endpoints.api"] = "http://127.0.0.1:8010"
+local_context["endpoints.console"] = "http://127.0.0.1:8020"
+
+
+def save_rendered(rendered, dst):
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    with dst.open(mode="w", encoding="utf-8") as dst_file:
+        dst_file.write(rendered)
+
+
+def resources(*include):
+    """build resources (png, js, css)"""
+    for file_type, roots in sources.items():
+        if file_type not in include:
+            continue
+        for root in roots:
+            for filename in (src_root / root).glob("**/*." + file_type):
+                yield file_type / filename.relative_to(src_root / root)
+
+
+def render_to_directory(dst_root, ctx):
+    dst_root.mkdir(parents=True, exist_ok=True)
+    ctx = extend_context(ctx)
+    print(ctx)
+
+    # 0. render all 1:1 sources
+    for src in resources("css", "js"):
+        tpl = env.get_template(str(src))
+        rendered = tpl.render(ctx)
+        dst = dst_root / src
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        with dst.open(mode="w", encoding="utf-8") as dst_file:
+            dst_file.write(rendered)
+
+    # 1. render html twice
+    full = env.get_template("__full.html")
+    partial = env.get_template("__partial.html")
+    for src in resources("html"):
+        # The src path to the partial .html file.
+        # Its content is {% included %} through page_filename
+        ctx["page_filename"] = str(src)
+
+        # html "flattens" into dst_root
+        dst = pathlib.Path(*src.parts[1:])
+
+        # 1.1 render full page
+        save_rendered(
+            full.render(ctx),
+            dst_root / dst)
+
+        # 1.2 render partial page
+        save_rendered(
+            partial.render(ctx),
+            dst_root / "_" / dst
+        )
+
+
+@click.command("compile")
+@click.option("--dst", required=True, help="Output directory")
+@click.option("--mode", required=True, help="where the output is running",
+              type=click.Choice(["local", "production"]))
+def compile(dst: str, mode):
+    render_to_directory(
+        dst_root=pathlib.Path(dst) / mode,
+        ctx=context.include("global", mode).snapshot
+    )
+
+
+if __name__ == "__main__":
+    compile()
