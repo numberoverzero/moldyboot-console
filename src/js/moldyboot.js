@@ -366,7 +366,11 @@ window.request = (function() {
                 self.sign(keyBlob, "get", path, headers, "") :
                 Promise.resolve(headers);
             preRequest
-            .then(headers=>window.superagent.get(self.endpoint + path).set(headers))
+            .then(headers=>{
+                var url = self.endpoint + path,
+                    opts = {h: headers, r: "json"};
+                return rq(url, opts);
+            })
             .then(resolve)
             .catch(reject);
         });
@@ -386,10 +390,11 @@ window.request = (function() {
                 self.sign(keyBlob, "post", path, (headers || {}), strBody) :
                 Promise.resolve(headers);
             preRequest
-            .then(headers=>window.superagent
-                .post(self.endpoint + path)
-                .set(headers)
-                .send(strBody))
+            .then(headers=>{
+                var url = self.endpoint + path,
+                    opts = {m:"POST", h: headers, b:strBody, r: "json"};
+                return rq(url, opts);
+            })
             .then(resolve)
             .catch(reject);
         });
@@ -420,17 +425,13 @@ window.Client = function(username) {
                     };
                     return request.post(keyBlob, "/keys", {}, credentials, false);
                 })
-                .then(response=>{
-                    if (!response.ok) {
-                        reject(response);
-                        return;
-                    }
-                    keyBlob.until = response.body.until;
-                    keyBlob.id = response.body.key_id;
+                .then(xhr=>{
+                    keyBlob.until = xhr.response.until;
+                    keyBlob.id = xhr.response.key_id;
 
                     window.keys.storage.saveKey(keyBlob, username)
                         .then(()=>window.keys.setActiveUser(username))
-                        .then(()=>resolve(response))
+                        .then(()=>resolve(xhr))
                         .catch(reject);
                 })
                 .catch(reject))

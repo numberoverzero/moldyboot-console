@@ -43,7 +43,7 @@ context = texas.Context()
 global_context = context.include("global")
 global_context.update({
     "css_files": ["milligram.min", "normalize.min"],
-    "js_files": ["nanobar.min", "superagent.min", "moldyboot"],
+    "js_files": ["nanobar.min", "moldyboot"],
     "inline_css": ["nanobar"],
     "inline_js": ["rq.min"],
 

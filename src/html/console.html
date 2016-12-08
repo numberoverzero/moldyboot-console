@@ -18,16 +18,11 @@
 
     Client.forActiveUser()
     .then(function(client) {return client.getKey();})
-    .then(function(response) {
-        if (response.ok) {
-            el("keyId").textContent = response.body.key_id;
-            el("fingerprint").textContent = response.body.fingerprint;
-            el("until").textContent = (new Date(response.body.until)).toLocaleTimeString();
+    .then(function(xhr) {
+            el("keyId").textContent = xhr.response.key_id;
+            el("fingerprint").textContent = xhr.response.fingerprint;
+            el("until").textContent = (new Date(xhr.response.until)).toLocaleTimeString();
             el("keySection").style.display = "";
-        } else {
-            console.log("Failed to validate key!");
-            console.log(response);
-        }
     })
     .catch(function(error) {
         if (window.errors.is(error, "NoActiveUser")) {
