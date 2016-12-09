@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import click
 import functools
+import lxml.html
 import os
 import pathlib
 import texas
@@ -27,15 +28,19 @@ loader = FileSystemLoader([
 env = Environment(loader=loader, **jinja_options)
 
 
-def split_html(html):
+def extract_tag(html, tag, invert=False):
     """Takes a string of html and returns two new strings.
 
     The first is the same html with all scripts stripped out, and the second is only the script tags.
     """
-    raise NotImplementedError()
+    elements = lxml.html.fromstring(html).getchildren()
+    match = lambda el: (el.tag == tag) is not invert
+    as_str = lambda el: lxml.html.tostring(el).decode("utf-8")
+    elements = filter(match, elements)
+    return "\n".join(map(as_str, elements))
 
-env.filters["without_scripts"] = lambda content: split_html(content)[0]
-env.filters["only_scripts"] = lambda content: split_html(content)[1]
+env.filters["without_scripts"] = lambda content: extract_tag(content, "script", True)
+env.filters["only_scripts"] = lambda content: extract_tag(content, "script", False)
 
 
 def extend_context(ctx):
