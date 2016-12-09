@@ -1,10 +1,13 @@
 {% set title = "..." %}
 <h1>Your IndexedDB has been cleared.</h1>
 <script type="application/javascript">
-    "use strict";
-    var req = indexedDB.deleteDatabase("{{webcrypto.databaseName}}");
-    req.onerror = req.onsuccess = req.onblocked = req.onupgradeneeded = function(event) {
-        console.log(event);
-        window.location.href = "{{endpoints.console}}/login";
-    }
+    mapp.onShowPage(()=>{
+        "use strict";
+        document.title = "{{ title }}";
+        var req = indexedDB.deleteDatabase("{{webcrypto.databaseName}}");
+        req.onerror = req.onsuccess = req.onblocked = req.onupgradeneeded = function(event) {
+            console.log(event);
+            mapp.go("login");
+        };
+    });
 </script>

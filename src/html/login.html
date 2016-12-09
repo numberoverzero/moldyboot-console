@@ -17,6 +17,7 @@
 <script type="application/javascript">
     "use strict";
     mapp.onShowPage(()=>{
+        document.title = "{{ title }}";
         // Start generating a new key asap.
         var newKey = window.keys.generate()
         .then(function(keyBlob) {
