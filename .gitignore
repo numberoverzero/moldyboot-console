@@ -63,3 +63,4 @@ target/
 .python-version
 
 manual_test.py
+.venv
